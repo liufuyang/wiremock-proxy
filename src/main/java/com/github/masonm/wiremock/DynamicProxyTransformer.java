@@ -13,15 +13,21 @@ import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 public class DynamicProxyTransformer extends ResponseDefinitionTransformer {
     @Override
     public ResponseDefinition transform(Request request, ResponseDefinition responseDefinition, FileSource files, Parameters parameters) {
+        String targetHeader = parameters.getString("headerName");
+
         URI requestUri;
         try {
             requestUri = new URI(request.getAbsoluteUrl());
         } catch (URISyntaxException e) {
             return responseDefinition;
         }
-        String hostHeader = request.getHeader("Host");
-        String proxyUrl = requestUri.getScheme() + "://" + hostHeader;
-        return ResponseDefinitionBuilder.like(responseDefinition).proxiedFrom(proxyUrl).build();
+
+        String proxyUrl = requestUri.getScheme() + "://" + request.getHeader(targetHeader);
+
+        return ResponseDefinitionBuilder
+                .like(responseDefinition)
+                .proxiedFrom(proxyUrl)
+                .build();
     }
 
     @Override
