@@ -15,14 +15,19 @@ public class DynamicProxyTransformer extends ResponseDefinitionTransformer {
     public ResponseDefinition transform(Request request, ResponseDefinition responseDefinition, FileSource files, Parameters parameters) {
         String targetHeader = parameters.getString("headerName");
 
-        URI requestUri;
+        URI requestUri, targetUri;
         try {
             requestUri = new URI(request.getAbsoluteUrl());
+            targetUri = new URI(request.getHeader(targetHeader));
         } catch (URISyntaxException e) {
             return responseDefinition;
         }
 
-        String proxyUrl = requestUri.getScheme() + "://" + request.getHeader(targetHeader);
+        String proxyUrl = "";
+        if (targetUri.getScheme() == null) {
+            proxyUrl = requestUri.getScheme() + "://";
+        }
+        proxyUrl += targetUri;
 
         return ResponseDefinitionBuilder
                 .like(responseDefinition)
